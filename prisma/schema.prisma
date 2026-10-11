@@ -1,0 +1,599 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BANNED
+}
+
+enum FollowStatus {
+  ACCEPTED
+  PENDING
+}
+
+enum VideoKind {
+  VIDEO
+  PHOTO
+}
+
+enum VideoStatus {
+  PROCESSING
+  READY
+  FAILED
+  DRAFT
+  SCHEDULED
+}
+
+enum Visibility {
+  PUBLIC
+  FRIENDS
+  PRIVATE
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO_SHARE
+  STORY_REPLY
+  GIFT
+}
+
+enum NotificationType {
+  LIKE
+  COMMENT
+  REPLY
+  COMMENT_LIKE
+  FOLLOW
+  FOLLOW_REQUEST
+  FOLLOW_ACCEPT
+  MENTION
+  REPOST
+  DUET
+  STITCH
+  GIFT
+  LIVE
+  SYSTEM
+}
+
+enum ReportTarget {
+  USER
+  VIDEO
+  COMMENT
+  LIVE
+  MESSAGE
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+enum LiveStatus {
+  LIVE
+  ENDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REJECTED
+}
+
+enum WithdrawalStatus {
+  PENDING
+  PAID
+  REJECTED
+}
+
+enum StoryType {
+  IMAGE
+  VIDEO
+}
+
+model User {
+  id             String       @id @default(cuid())
+  username       String       @unique @db.VarChar(30)
+  email          String       @unique
+  name           String       @db.VarChar(60)
+  passwordHash   String
+  bio            String       @default("") @db.VarChar(160)
+  website        String?      @db.VarChar(200)
+  avatarUrl      String?
+  role           UserRole     @default(USER)
+  status         UserStatus   @default(ACTIVE)
+  isVerified     Boolean      @default(false)
+  isPrivate      Boolean      @default(false)
+  showLiked      Boolean      @default(true)
+  allowDuet      Boolean      @default(true)
+  allowStitch    Boolean      @default(true)
+  allowDownload  Boolean      @default(true)
+  allowMessages  String       @default("everyone")
+  commentFilter  String[]     @default([])
+  coins          Int          @default(0)
+  diamonds       Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  sessions       Session[]
+  videos         Video[]          @relation("VideoAuthor")
+  likes          Like[]
+  favorites      Favorite[]
+  collections    Collection[]
+  reposts        Repost[]
+  comments       Comment[]
+  commentLikes   CommentLike[]
+  views          View[]
+  notInterested  NotInterested[]
+  following      Follow[]         @relation("Follower")
+  followers      Follow[]         @relation("Following")
+  blocking       Block[]          @relation("Blocker")
+  blockedBy      Block[]          @relation("Blocked")
+  sounds         Sound[]
+  favoriteSounds FavoriteSound[]
+  memberships    ConversationMember[]
+  messages       Message[]
+  notifications  Notification[]   @relation("NotificationUser")
+  actedNotifications Notification[] @relation("NotificationActor")
+  reports        Report[]
+  lives          LiveStream[]
+  liveComments   LiveComment[]
+  giftsSent      GiftTransaction[] @relation("GiftSender")
+  giftsReceived  GiftTransaction[] @relation("GiftReceiver")
+  purchases      CoinPurchase[]
+  withdrawals    Withdrawal[]
+  stories        Story[]
+  storyViews     StoryView[]
+  profileViews   ProfileView[]    @relation("ProfileViewed")
+  profileVisits  ProfileView[]    @relation("ProfileViewer")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  userAgent String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Follow {
+  followerId  String
+  followingId String
+  status      FollowStatus @default(ACCEPTED)
+  createdAt   DateTime     @default(now())
+  follower    User         @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User         @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@index([followingId, status])
+}
+
+model Block {
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+}
+
+model Sound {
+  id          String   @id @default(cuid())
+  title       String   @db.VarChar(120)
+  artist      String   @db.VarChar(120)
+  audioUrl    String
+  coverUrl    String?
+  durationSec Float    @default(0)
+  isOriginal  Boolean  @default(false)
+  featured    Boolean  @default(false)
+  hidden      Boolean  @default(false)
+  creatorId   String?
+  createdAt   DateTime @default(now())
+  creator     User?    @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  videos      Video[]
+  favorites   FavoriteSound[]
+
+  @@index([featured])
+}
+
+model FavoriteSound {
+  userId    String
+  soundId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sound     Sound    @relation(fields: [soundId], references: [id], onDelete: Cascade)
+
+  @@id([userId, soundId])
+}
+
+model Video {
+  id             String       @id @default(cuid())
+  authorId       String
+  kind           VideoKind    @default(VIDEO)
+  status         VideoStatus  @default(PROCESSING)
+  caption        String       @default("") @db.VarChar(2200)
+  videoUrl       String?
+  posterUrl      String?
+  photoUrls      String[]     @default([])
+  width          Int?
+  height         Int?
+  durationSec    Float?
+  soundId        String?
+  visibility     Visibility   @default(PUBLIC)
+  allowComments  Boolean      @default(true)
+  allowDuet      Boolean      @default(true)
+  allowStitch    Boolean      @default(true)
+  allowDownload  Boolean      @default(true)
+  duetOfId       String?
+  stitchOfId     String?
+  location       String?      @db.VarChar(100)
+  pinned         Boolean      @default(false)
+  hidden         Boolean      @default(false)
+  featured       Boolean      @default(false)
+  viewsCount     Int          @default(0)
+  sharesCount    Int          @default(0)
+  failReason     String?
+  scheduledAt    DateTime?
+  publishedAt    DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  author         User         @relation("VideoAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  sound          Sound?       @relation(fields: [soundId], references: [id], onDelete: SetNull)
+  duetOf         Video?       @relation("Duets", fields: [duetOfId], references: [id], onDelete: SetNull)
+  duets          Video[]      @relation("Duets")
+  stitchOf       Video?       @relation("Stitches", fields: [stitchOfId], references: [id], onDelete: SetNull)
+  stitches       Video[]      @relation("Stitches")
+  hashtags       VideoHashtag[]
+  likes          Like[]
+  favorites      Favorite[]
+  reposts        Repost[]
+  comments       Comment[]
+  views          View[]
+  notInterested  NotInterested[]
+  gifts          GiftTransaction[]
+
+  @@index([authorId, createdAt])
+  @@index([status, visibility, hidden, createdAt])
+  @@index([soundId])
+}
+
+model Hashtag {
+  id        String         @id @default(cuid())
+  name      String         @unique @db.VarChar(60)
+  createdAt DateTime       @default(now())
+  videos    VideoHashtag[]
+}
+
+model VideoHashtag {
+  videoId   String
+  hashtagId String
+  video     Video   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  hashtag   Hashtag @relation(fields: [hashtagId], references: [id], onDelete: Cascade)
+
+  @@id([videoId, hashtagId])
+  @@index([hashtagId])
+}
+
+model Like {
+  userId    String
+  videoId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@id([userId, videoId])
+  @@index([videoId])
+}
+
+model Collection {
+  id        String     @id @default(cuid())
+  userId    String
+  name      String     @db.VarChar(60)
+  createdAt DateTime   @default(now())
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  favorites Favorite[]
+}
+
+model Favorite {
+  userId       String
+  videoId      String
+  collectionId String?
+  createdAt    DateTime    @default(now())
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video        Video       @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  collection   Collection? @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+
+  @@id([userId, videoId])
+}
+
+model Repost {
+  userId    String
+  videoId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@id([userId, videoId])
+  @@index([videoId])
+}
+
+model Comment {
+  id        String        @id @default(cuid())
+  videoId   String
+  authorId  String
+  parentId  String?
+  body      String        @db.VarChar(500)
+  pinned    Boolean       @default(false)
+  hidden    Boolean       @default(false)
+  createdAt DateTime      @default(now())
+  video     Video         @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent    Comment?      @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[]     @relation("Replies")
+  likes     CommentLike[]
+
+  @@index([videoId, createdAt])
+  @@index([parentId])
+}
+
+model CommentLike {
+  userId    String
+  commentId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@id([userId, commentId])
+}
+
+model View {
+  id        String   @id @default(cuid())
+  userId    String?
+  videoId   String
+  watchedMs Int      @default(0)
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([videoId, createdAt])
+}
+
+model NotInterested {
+  userId    String
+  videoId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@id([userId, videoId])
+}
+
+model ProfileView {
+  id        String   @id @default(cuid())
+  viewerId  String
+  profileId String
+  createdAt DateTime @default(now())
+  viewer    User     @relation("ProfileViewer", fields: [viewerId], references: [id], onDelete: Cascade)
+  profile   User     @relation("ProfileViewed", fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, createdAt])
+}
+
+model Conversation {
+  id        String               @id @default(cuid())
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  members   ConversationMember[]
+  messages  Message[]
+}
+
+model ConversationMember {
+  conversationId String
+  userId         String
+  lastReadAt     DateTime     @default(now())
+  joinedAt       DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  type           MessageType  @default(TEXT)
+  body           String       @default("") @db.VarChar(2000)
+  mediaUrl       String?
+  videoId        String?
+  deleted        Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  actorId   String?
+  type      NotificationType
+  videoId   String?
+  commentId String?
+  text      String?          @db.VarChar(300)
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  user      User             @relation("NotificationUser", fields: [userId], references: [id], onDelete: Cascade)
+  actor     User?            @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Report {
+  id         String       @id @default(cuid())
+  reporterId String
+  targetType ReportTarget
+  targetId   String
+  reason     String       @db.VarChar(120)
+  details    String?      @db.VarChar(1000)
+  status     ReportStatus @default(OPEN)
+  createdAt  DateTime     @default(now())
+  reporter   User         @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+}
+
+model LiveStream {
+  id          String        @id @default(cuid())
+  hostId      String
+  title       String        @db.VarChar(120)
+  status      LiveStatus    @default(LIVE)
+  viewerPeak  Int           @default(0)
+  likesCount  Int           @default(0)
+  diamonds    Int           @default(0)
+  startedAt   DateTime      @default(now())
+  endedAt     DateTime?
+  host        User          @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  comments    LiveComment[]
+  gifts       GiftTransaction[]
+
+  @@index([status, startedAt])
+}
+
+model LiveComment {
+  id        String     @id @default(cuid())
+  liveId    String
+  userId    String
+  body      String     @db.VarChar(300)
+  createdAt DateTime   @default(now())
+  live      LiveStream @relation(fields: [liveId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([liveId, createdAt])
+}
+
+model Gift {
+  id        String            @id @default(cuid())
+  name      String            @db.VarChar(40)
+  emoji     String            @db.VarChar(16)
+  coins     Int
+  active    Boolean           @default(true)
+  sortOrder Int               @default(0)
+  sends     GiftTransaction[]
+}
+
+model GiftTransaction {
+  id         String      @id @default(cuid())
+  senderId   String
+  receiverId String
+  giftId     String
+  coins      Int
+  diamonds   Int
+  quantity   Int         @default(1)
+  videoId    String?
+  liveId     String?
+  createdAt  DateTime    @default(now())
+  sender     User        @relation("GiftSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User        @relation("GiftReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  gift       Gift        @relation(fields: [giftId], references: [id], onDelete: Cascade)
+  video      Video?      @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  live       LiveStream? @relation(fields: [liveId], references: [id], onDelete: SetNull)
+
+  @@index([receiverId, createdAt])
+  @@index([senderId, createdAt])
+}
+
+model CoinPackage {
+  id        String         @id @default(cuid())
+  coins     Int
+  bonus     Int            @default(0)
+  priceInr  Int
+  active    Boolean        @default(true)
+  sortOrder Int            @default(0)
+  purchases CoinPurchase[]
+}
+
+model CoinPurchase {
+  id          String        @id @default(cuid())
+  userId      String
+  packageId   String?
+  coins       Int
+  amountInr   Int
+  provider    String        @default("upi")
+  providerRef String?       @db.VarChar(120)
+  status      PaymentStatus @default(PENDING)
+  note        String?       @db.VarChar(300)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package     CoinPackage?  @relation(fields: [packageId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+}
+
+model Withdrawal {
+  id        String           @id @default(cuid())
+  userId    String
+  diamonds  Int
+  amountInr Float
+  upiId     String           @db.VarChar(100)
+  status    WithdrawalStatus @default(PENDING)
+  note      String?          @db.VarChar(300)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+}
+
+model Story {
+  id        String      @id @default(cuid())
+  authorId  String
+  type      StoryType
+  mediaUrl  String
+  posterUrl String?
+  caption   String      @default("") @db.VarChar(200)
+  expiresAt DateTime
+  createdAt DateTime    @default(now())
+  author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  views     StoryView[]
+
+  @@index([authorId, expiresAt])
+}
+
+model StoryView {
+  storyId   String
+  userId    String
+  liked     Boolean  @default(false)
+  createdAt DateTime @default(now())
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([storyId, userId])
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
