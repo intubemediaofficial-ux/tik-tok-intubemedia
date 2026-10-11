@@ -158,7 +158,7 @@ export function VideoSlide({ video: initial, active, me, onHide }: { video: Vide
         {hearts.map((h) => <Heart key={h.id} className="big-heart" size={96} fill="currentColor" style={{ left: h.x, top: h.y }} />)}
         {paused && v.kind === "VIDEO" && <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", pointerEvents: "none" }}><Play size={72} fill="#fff9" color="#fff9" /></div>}
         {v.kind === "VIDEO" && (
-          <div style={{ position: "absolute", top: 14, right: 14, display: "flex", gap: 8, zIndex: 3 }}>
+          <div style={{ position: "absolute", top: 70, right: 14, display: "flex", flexDirection: "column", gap: 8, zIndex: 3 }}>
             <button onClick={togglePlay} style={{ background: "#0006", borderRadius: 99, padding: 8 }} aria-label="Play/pause">{paused ? <Play size={18} /> : <Pause size={18} />}</button>
             <button onClick={toggleMute} style={{ background: "#0006", borderRadius: 99, padding: 8 }} aria-label="Mute">{muted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>
           </div>
