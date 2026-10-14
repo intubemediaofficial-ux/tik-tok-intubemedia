@@ -31,7 +31,7 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
   const series = Array.from({ length: days }, (_, i) => { const d = daysAgo(days - 1 - i).toISOString().slice(0, 10); return { d, n: map.get(d) ?? 0 }; });
   const max = Math.max(1, ...series.map((s) => s.n));
   const stats = [
-    { label: "Video views", v: views, icon: Eye, c: "var(--amber)" },
+    { label: "Video views", v: views, icon: Eye, c: "var(--amber)", sub: `${compact(videos.reduce((n, v) => n + v.viewsCount, 0))} total` },
     { label: "Likes", v: likes, icon: Heart, c: "var(--rose)" },
     { label: "Comments", v: comments, icon: MessageCircle, c: "var(--violet)" },
     { label: "Profile views", v: profileViews, icon: Users, c: "#5ad1ff" },
@@ -44,7 +44,7 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
     <div className="page">
       <div className="row between" style={{ flexWrap: "wrap", gap: 12, marginBottom: 18 }}>
         <h1 className="section-title" style={{ fontSize: 26, margin: 0 }}><BarChart3 color="var(--amber)" />Creator Studio</h1>
-        <div className="tabs">{[7, 28, 60].map((d) => <Link key={d} href={`/studio?days=${d}`} className={`chip ${days === d ? "on" : ""}`}>Last {d} days</Link>)}</div>
+        <div className="tabs">{[7, 28, 60].map((d) => <Link key={d} href={`/studio?days=${d}`} className={`chip ${days === d ? "on" : ""}`} style={{ whiteSpace: "nowrap" }}>{d} days</Link>)}</div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 12, marginBottom: 18 }}>
         {stats.map((s) => <div key={s.label} className="stat-card"><div className="row muted" style={{ fontSize: 13 }}><s.icon size={16} color={s.c} />{s.label}</div><div className="v">{compact(s.v)}{s.suffix}</div>{s.sub && <div className="muted" style={{ fontSize: 12 }}>{s.sub}</div>}</div>)}

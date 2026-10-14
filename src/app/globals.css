@@ -97,7 +97,7 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
 .feed::-webkit-scrollbar { display: none; }
 .feed-top { position: fixed; z-index: 20; top: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; padding: 5px; border-radius: 16px; background: #0b0a12aa; backdrop-filter: blur(12px); border: 1px solid #ffffff14; }
 @media (min-width: 861px) { .feed-top { left: calc(50% + 124px); } }
-.feed-top a { padding: 7px 14px; border-radius: 12px; font-weight: 700; font-size: 14px; color: #cfc9e8; }
+.feed-top a { white-space: nowrap; padding: 7px 14px; border-radius: 12px; font-weight: 700; font-size: 14px; color: #cfc9e8; }
 .feed-top a.on { background: var(--grad); color: #120f1d; }
 .slide { height: 100dvh; scroll-snap-align: start; scroll-snap-stop: always; display: flex; align-items: center; justify-content: center; gap: 18px; padding: 16px 0; position: relative; }
 .stage { position: relative; height: calc(100dvh - 32px); aspect-ratio: 9 / 16; max-width: 100vw; border-radius: 22px; overflow: hidden; background: #000; box-shadow: 0 30px 80px -30px #ff3d7f44; }
