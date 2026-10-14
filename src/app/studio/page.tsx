@@ -31,7 +31,7 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
   const series = Array.from({ length: days }, (_, i) => { const d = daysAgo(days - 1 - i).toISOString().slice(0, 10); return { d, n: map.get(d) ?? 0 }; });
   const max = Math.max(1, ...series.map((s) => s.n));
   const stats = [
-    { label: "Video views", v: views, icon: Eye, c: "var(--amber)" },
+    { label: "Video views", v: views, icon: Eye, c: "var(--amber)", sub: `${compact(videos.reduce((n, v) => n + v.viewsCount, 0))} total` },
     { label: "Likes", v: likes, icon: Heart, c: "var(--rose)" },
     { label: "Comments", v: comments, icon: MessageCircle, c: "var(--violet)" },
     { label: "Profile views", v: profileViews, icon: Users, c: "#5ad1ff" },

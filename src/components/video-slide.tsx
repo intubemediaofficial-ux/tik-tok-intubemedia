@@ -118,11 +118,11 @@ export function VideoSlide({ video: initial, active, me, onHide }: { video: Vide
           </button>
         )}
       </div>
-      <button className={`rail-btn ${v.viewer.liked ? "on" : ""}`} onClick={() => like()}><span className="ico"><Heart size={24} fill={v.viewer.liked ? "currentColor" : "none"} /></span>{compactNum(v.counts.likes)}</button>
-      <button className="rail-btn" onClick={() => setSheet("comments")}><span className="ico"><MessageCircle size={24} /></span>{compactNum(v.counts.comments)}</button>
-      <button className={`rail-btn fav ${v.viewer.favorited ? "on" : ""}`} onClick={fav}><span className="ico"><Bookmark size={24} fill={v.viewer.favorited ? "currentColor" : "none"} /></span>{compactNum(v.counts.favorites)}</button>
-      {!v.viewer.isAuthor && <button className="rail-btn" onClick={() => (me ? setSheet("gift") : (location.href = "/login"))}><span className="ico" style={{ color: "var(--amber)" }}><Gift size={24} /></span>Gift</button>}
-      <button className="rail-btn" onClick={() => setSheet("share")}><span className="ico"><Share2 size={24} /></span>{compactNum(v.counts.shares)}</button>
+      <button className={`rail-btn ${v.viewer.liked ? "on" : ""}`} onClick={() => like()} aria-label="Like" aria-pressed={v.viewer.liked}><span className="ico"><Heart size={24} fill={v.viewer.liked ? "currentColor" : "none"} /></span>{compactNum(v.counts.likes)}</button>
+      <button className="rail-btn" onClick={() => setSheet("comments")} aria-label="Comments"><span className="ico"><MessageCircle size={24} /></span>{compactNum(v.counts.comments)}</button>
+      <button className={`rail-btn fav ${v.viewer.favorited ? "on" : ""}`} onClick={fav} aria-label="Save" aria-pressed={v.viewer.favorited}><span className="ico"><Bookmark size={24} fill={v.viewer.favorited ? "currentColor" : "none"} /></span>{compactNum(v.counts.favorites)}</button>
+      {!v.viewer.isAuthor && <button className="rail-btn" onClick={() => (me ? setSheet("gift") : (location.href = "/login"))} aria-label="Send gift"><span className="ico" style={{ color: "var(--amber)" }}><Gift size={24} /></span>Gift</button>}
+      <button className="rail-btn" onClick={() => setSheet("share")} aria-label="Share"><span className="ico"><Share2 size={24} /></span>{compactNum(v.counts.shares)}</button>
       {v.sound && (
         <Link href={`/sound/${v.sound.id}`} aria-label="Sound"><span className="spin-disc" style={{ backgroundImage: `url(${v.sound.coverUrl || v.author.avatarUrl || "/icon-192.png"})`, display: "block" }} /></Link>
       )}
@@ -148,8 +148,8 @@ export function VideoSlide({ video: initial, active, me, onHide }: { video: Vide
             {v.photoUrls.map((u, i) => <img key={u} src={u} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", opacity: i === photo ? 1 : 0, transition: "opacity .5s" }} />)}
             {v.photoUrls.length > 1 && (
               <>
-                <button onClick={(e) => { e.stopPropagation(); setPhoto((p) => (p - 1 + v.photoUrls.length) % v.photoUrls.length); }} style={{ position: "absolute", left: 8, top: "50%", background: "#0006", borderRadius: 99, padding: 6 }}><ChevronLeft /></button>
-                <button onClick={(e) => { e.stopPropagation(); setPhoto((p) => (p + 1) % v.photoUrls.length); }} style={{ position: "absolute", right: 8, top: "50%", background: "#0006", borderRadius: 99, padding: 6 }}><ChevronRight /></button>
+                <button onClick={(e) => { e.stopPropagation(); setPhoto((p) => (p - 1 + v.photoUrls.length) % v.photoUrls.length); }} aria-label="Previous photo" style={{ position: "absolute", left: 8, top: "50%", background: "#0006", borderRadius: 99, padding: 6 }}><ChevronLeft /></button>
+                <button onClick={(e) => { e.stopPropagation(); setPhoto((p) => (p + 1) % v.photoUrls.length); }} aria-label="Next photo" style={{ position: "absolute", right: 8, top: "50%", background: "#0006", borderRadius: 99, padding: 6 }}><ChevronRight /></button>
                 <div style={{ position: "absolute", top: 14, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 4 }}>{v.photoUrls.map((u, i) => <span key={u} style={{ width: i === photo ? 18 : 6, height: 6, borderRadius: 9, background: i === photo ? "#fff" : "#fff6", transition: ".2s" }} />)}</div>
               </>
             )}
