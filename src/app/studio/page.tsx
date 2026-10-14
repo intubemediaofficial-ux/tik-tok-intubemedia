@@ -44,7 +44,7 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
     <div className="page">
       <div className="row between" style={{ flexWrap: "wrap", gap: 12, marginBottom: 18 }}>
         <h1 className="section-title" style={{ fontSize: 26, margin: 0 }}><BarChart3 color="var(--amber)" />Creator Studio</h1>
-        <div className="tabs">{[7, 28, 60].map((d) => <Link key={d} href={`/studio?days=${d}`} className={`chip ${days === d ? "on" : ""}`} style={{ whiteSpace: "nowrap" }}>Last {d} days</Link>)}</div>
+        <div className="tabs">{[7, 28, 60].map((d) => <Link key={d} href={`/studio?days=${d}`} className={`chip ${days === d ? "on" : ""}`} style={{ whiteSpace: "nowrap" }}>{d} days</Link>)}</div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 12, marginBottom: 18 }}>
         {stats.map((s) => <div key={s.label} className="stat-card"><div className="row muted" style={{ fontSize: 13 }}><s.icon size={16} color={s.c} />{s.label}</div><div className="v">{compact(s.v)}{s.suffix}</div>{s.sub && <div className="muted" style={{ fontSize: 12 }}>{s.sub}</div>}</div>)}
